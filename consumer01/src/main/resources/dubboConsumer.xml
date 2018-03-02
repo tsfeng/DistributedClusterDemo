@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://code.alibabatech.com/schema/dubbo
+       http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+    <!-- 消费方应用名，用于计算依赖关系，不是匹配条件，不要与提供方一样 -->
+    <dubbo:application name="consumer01"/>
+    <dubbo:protocol name="dubbo" port="30881" />
+    <!-- 使用zookeeper广播注册中心暴露服务地址 -->
+    <dubbo:registry address="zookeeper://zk1.xxgj365.com:2180"/>
+
+    <!-- 生成远程服务代理，可以和本地bean一样使用demoService -->
+    <dubbo:reference id="testService" interface="com.tsfeng.cn.service.TestService"/>
+
+    <dubbo:reference id="tccAccountService" interface="com.tsfeng.cn.service.AccountService"
+        group="org.bytesoft.bytetcc" filter="compensable" loadbalance="compensable" cluster="failfast" retries="0"/>
+
+    <dubbo:reference id="normalAccountService" interface="com.tsfeng.cn.service.AccountService"
+        cluster="failfast" retries="0" />
+
+    <dubbo:reference id="tccAccountService02" interface="com.tsfeng.cn.service.AccountService02"
+                     group="org.bytesoft.bytetcc" filter="compensable" loadbalance="compensable" cluster="failfast" retries="0"/>
+
+</beans>

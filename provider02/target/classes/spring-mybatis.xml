@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 引入jdbc.properties -->
+    <context:property-placeholder location="classpath:jdbc.properties" />
+
+    <!-- 在使用mybatis时，spring使用sqlsessionFactoryBean来管理mybatis的sqlsessionFactory -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <!-- mybatis配置文件路径 -->
+        <property name="configLocation" value="" />
+        <!-- 自动扫描目录, 省掉Configuration.xml里的手工配置 -->
+        <property name="mapperLocations" value="classpath*:com/tsfeng/cn/mapper/*.xml" />
+    </bean>
+
+    <!-- 动态代理实现，不用写dao的实现 -->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.tsfeng.cn.dao" />
+        <!-- 如果只有一个数据源的话可以不用指定，但是如果有多个数据源的话必须要指定 -->
+        <!--<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />-->
+    </bean>
+
+
+    <!-- 注意：补偿型service中应该尽量使用org.bytesoft.bytejta.supports.jdbc.LocalXADataSource封装过的数据源
+    （如本例中的'dataSource'，而不是'dontUseThisDataSourceDirectly'）
+    -->
+    <bean id="dataSource" class="org.bytesoft.bytejta.supports.jdbc.LocalXADataSource">
+        <property name="dataSource" ref="dontUseThisDataSourceDirectly" />
+    </bean>
+
+    <bean id="dontUseThisDataSourceDirectly" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}" />
+        <property name="url" value="${jdbc.url}" />
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}" />
+
+        <!-- 连接池初始连接数 -->
+        <property name="initialSize" value="1" />
+        <!-- 最大活动连接数，如设置为负数，则不限制 -->
+        <property name="maxTotal" value="10" />
+        <!-- 最大空闲连接数.当经过一个高峰时间后，连接池可以慢慢将已经用不到的连接慢慢释放一部分，一直减少到maxIdle为止 -->
+        <property name="maxIdle" value="5" />
+        <!-- 最小空闲连接数.当空闲的连接数少于阀值时，连接池就会预申请去一些连接，以免洪峰来时来不及申请 -->
+        <property name="minIdle" value="1" />
+
+        <!-- 从连接池获取一个连接时，最大的等待时间，设置为-1时，如果没有可用连接，连接池会一直无限期等待，直到获取到连接为止。如果设置为N（毫秒），则连接池会等待N毫秒，等待不到，则抛出异常 -->
+        <property name="maxWaitMillis" value="60000" />
+        <!-- 从连接池获取一个连接时，验证有效性；默认true-->
+        <property name="testOnBorrow" value="true" />
+        <!-- 连接空闲时，验证有效性；默认false -->
+        <property name="testWhileIdle" value="false" />
+        <!-- 连接被归还到连接池时，验证有效性；默认false-->
+        <property name="testOnReturn" value="false" />
+        <!-- 连接创建后，马上验证有效性；默认false-->
+        <property name="testOnCreate" value="false" />
+        <!-- 确认查询SQL -->
+        <property name="validationQuery" value="SELECT 1" />
+        <!-- 确认查询SQL的超时时间 -->
+        <property name="validationQueryTimeout" value="-1" />
+
+        <!-- 标志是否为应用程序中遗弃语句或连接的代码开启日志堆栈追踪；默认false -->
+        <property name="logAbandoned" value="false" />
+        <!-- 一个被抛弃连接可以被移除的超时时间；默认300秒 -->
+        <property name="removeAbandonedTimeout" value="300" />
+        <!-- 运行判断连接超时任务的时间间隔，单位为毫秒，默认为-1，即不执行任务 -->
+        <property name="timeBetweenEvictionRunsMillis" value="30000" />
+        <!-- 空闲的连接最低要待N毫秒后，才会被释放；默认为半小时，即30*60*1000 -->
+        <property name="minEvictableIdleTimeMillis" value="1800000" />
+    </bean>
+</beans>
